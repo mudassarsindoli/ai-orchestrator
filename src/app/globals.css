@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #08090d;
+  color: #e7eaf0;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2b3240 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #2b3240;
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #394152;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── React Flow theme overrides ────────────────────────────── */
+.react-flow__attribution {
+  background: transparent;
+  color: #4b5563;
+  font-size: 9px;
+}
+.react-flow__attribution a {
+  color: #4b5563;
+}
+
+.react-flow__controls {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid #232936;
+}
+.react-flow__controls-button {
+  background: #151923;
+  border-bottom: 1px solid #232936;
+  color: #cbd5e1;
+  width: 28px;
+  height: 28px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.react-flow__controls-button:hover {
+  background: #1d2330;
+  color: #ffffff;
+}
+.react-flow__controls-button svg {
+  fill: currentColor;
+}
+
+.react-flow__minimap {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #232936;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  border: 2px solid #08090d;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.react-flow__handle:hover {
+  transform: scale(1.25);
+}
+
+.react-flow__node {
+  font-family: inherit;
+}
+
+.react-flow__edge-path {
+  transition: stroke-dashoffset 0.04s linear;
+}
+
+.react-flow__node.selected .workflow-node {
+  border-color: var(--node-accent, #6d7bff);
+  box-shadow:
+    0 0 0 1px var(--node-accent, #6d7bff),
+    0 0 18px -4px var(--node-accent, #6d7bff);
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #ffffff;
+}
+
+/* Hide the default edge selection box clutter */
+.react-flow__edge .react-flow__edge-textbg {
+  fill: #0b0d12;
+  stroke: #232936;
+}
+.react-flow__edge-text {
+  fill: #9aa4b5;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: ui-monospace, monospace;
+}
+
+/* selection rectangle */
+.react-flow__selection {
+  background: rgba(109, 123, 255, 0.08);
+  border: 1px solid rgba(109, 123, 255, 0.5);
+  border-radius: 4px;
+}
+
+.react-flow__nodesselection-rect {
+  border: 1px dashed rgba(109, 123, 255, 0.6);
+}
+
+/* connection line in progress */
+.react-flow__connection-path {
+  stroke: #6d7bff;
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  animation: dash-flow 1.2s linear infinite;
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+/* Fade in nodes on load — re-triggered via key on templates */
+@layer utilities {
+  .glow-text {
+    text-shadow: 0 0 18px rgba(109, 123, 255, 0.55);
+  }
+}
+
+/* Subtle canvas center "watermark" grid already via Background */
