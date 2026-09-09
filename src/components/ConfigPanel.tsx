@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   Copy,
   Trash2,
-  GripVertical,
   X,
   Check,
   Loader2,
@@ -13,8 +11,7 @@ import {
 } from "lucide-react";
 import type { ConfigField, NodeResult, WorkflowNode } from "@/lib/types";
 import { getNodeConfig } from "@/lib/nodes";
-import { formatDuration } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { formatDuration, cn } from "@/lib/utils";
 
 interface ConfigPanelProps {
   node: WorkflowNode | null;
@@ -43,25 +40,28 @@ export default function ConfigPanel({
 
   if (!node) {
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-6 text-center text-slate-500">
-        <GripVertical size={20} className="opacity-30" />
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-6 text-center text-txt-secondary">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-dim">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a19f9d" strokeWidth="1.5">
+            <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+          </svg>
+        </div>
         <p className="text-[13px] leading-relaxed">
-          No node selected. Click a node on the canvas to view and edit its
-          configuration, execution output and connections.
+          Select a node on the canvas to view and edit its configuration.
         </p>
-        <div className="space-y-1.5 rounded-lg border border-panel-line bg-panel px-3 py-2.5 text-[11px] text-left text-slate-400">
-          <div className="font-semibold text-slate-300">Shortcuts</div>
+        <div className="space-y-1.5 rounded border border-bline bg-surface-dim px-3 py-2.5 text-[11px] text-left text-txt-secondary">
+          <div className="font-medium text-txt">Shortcuts</div>
           <div className="flex items-center justify-between gap-6">
-            <span>Duplicate node</span>
-            <kbd className="rounded border border-panel-line bg-canvas-deep px-1.5 py-0.5 font-mono">⌘D</kbd>
+            <span>Duplicate</span>
+            <kbd className="rounded border border-bline bg-white px-1.5 py-0.5 font-mono text-[10px]">
+              Cmd+D
+            </kbd>
           </div>
           <div className="flex items-center justify-between gap-6">
-            <span>Delete node</span>
-            <kbd className="rounded border border-panel-line bg-canvas-deep px-1.5 py-0.5 font-mono">⌫</kbd>
-          </div>
-          <div className="flex items-center justify-between gap-6">
-            <span>Pan canvas</span>
-            <kbd className="rounded border border-panel-line bg-canvas-deep px-1.5 py-0.5 font-mono">Scroll</kbd>
+            <span>Delete</span>
+            <kbd className="rounded border border-bline bg-white px-1.5 py-0.5 font-mono text-[10px]">
+              Del
+            </kbd>
           </div>
         </div>
       </div>
@@ -83,10 +83,10 @@ export default function ConfigPanel({
           <button
             onClick={() => update(field.key, !val)}
             className="relative flex h-5 w-9 items-center rounded-full transition"
-            style={{ background: val ? "#6d7bff" : "#2b3240" }}
+            style={{ background: val ? "#0078d4" : "#d2d0ce" }}
           >
             <span
-              className="absolute h-4 w-4 rounded-full bg-white shadow transition-all"
+              className="absolute h-4 w-4 rounded-full bg-white shadow-sm transition-all"
               style={{ left: val ? "calc(100% - 18px)" : "2px" }}
             />
           </button>
@@ -97,9 +97,14 @@ export default function ConfigPanel({
           <input
             type={field.type === "number" ? "number" : "text"}
             value={String(val ?? "")}
-            onChange={(e) => update(field.key, field.type === "number" ? Number(e.target.value) : e.target.value)}
+            onChange={(e) =>
+              update(
+                field.key,
+                field.type === "number" ? Number(e.target.value) : e.target.value
+              )
+            }
             placeholder={field.placeholder}
-            className="w-full rounded-md border border-panel-line bg-canvas-deep px-2.5 py-1.5 font-mono text-[12px] text-slate-200 outline-none transition focus:border-accent/50"
+            className="w-full rounded border border-bline bg-white px-2.5 py-1.5 font-mono text-[12px] text-txt outline-none transition focus:border-ms-blue focus:ring-1 focus:ring-ms-blue/30"
           />
         );
       case "textarea":
@@ -109,7 +114,7 @@ export default function ConfigPanel({
             onChange={(e) => update(field.key, e.target.value)}
             placeholder={field.placeholder}
             rows={3}
-            className="w-full resize-y rounded-md border border-panel-line bg-canvas-deep px-2.5 py-1.5 font-mono text-[11.5px] leading-relaxed text-slate-200 outline-none transition focus:border-accent/50"
+            className="w-full resize-y rounded border border-bline bg-white px-2.5 py-1.5 font-mono text-[11.5px] leading-relaxed text-txt outline-none transition focus:border-ms-blue focus:ring-1 focus:ring-ms-blue/30"
           />
         );
       case "select":
@@ -117,7 +122,7 @@ export default function ConfigPanel({
           <select
             value={String(val ?? "")}
             onChange={(e) => update(field.key, e.target.value)}
-            className="w-full rounded-md border border-panel-line bg-canvas-deep px-2.5 py-1.5 text-[12px] text-slate-200 outline-none transition focus:border-accent/50"
+            className="w-full rounded border border-bline bg-white px-2.5 py-1.5 text-[12px] text-txt outline-none transition focus:border-ms-blue focus:ring-1 focus:ring-ms-blue/30"
           >
             {field.options?.map((o) => (
               <option key={o.value} value={o.value}>
@@ -142,10 +147,10 @@ export default function ConfigPanel({
                     )
                   }
                   className={cn(
-                    "flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition",
+                    "flex items-center gap-1 rounded border px-2 py-1 text-[11px] font-medium transition",
                     on
-                      ? "border-accent/50 bg-accent/15 text-accent-soft"
-                      : "border-panel-line bg-panel text-slate-400 hover:text-slate-200"
+                      ? "border-ms-blue/40 bg-ms-blue-50 text-ms-blue"
+                      : "border-bline bg-white text-txt-secondary hover:text-txt"
                   )}
                 >
                   {on && <Check size={11} />}
@@ -161,112 +166,105 @@ export default function ConfigPanel({
           <input
             value={String(val ?? "")}
             onChange={(e) => update(field.key, e.target.value)}
-            className="w-full rounded-md border border-panel-line bg-canvas-deep px-2.5 py-1.5 font-mono text-[12px] text-slate-200 outline-none"
+            className="w-full rounded border border-bline bg-white px-2.5 py-1.5 font-mono text-[12px] text-txt outline-none"
           />
         );
     }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 24 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 24 }}
-      transition={{ duration: 0.2 }}
-      className="flex h-full w-full flex-col bg-canvas-deep/90"
-    >
-      {/* header */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-panel-line px-3 py-2.5">
+    <div className="flex h-full w-full flex-col bg-surface">
+      {/* Header */}
+      <div className="flex shrink-0 items-center gap-2 border-b border-bline px-3 py-2.5">
         <div
-          className="flex h-7 w-7 items-center justify-center rounded-lg"
-          style={{ background: `${cfg.accent}1a`, color: cfg.accent }}
+          className="flex h-7 w-7 items-center justify-center rounded-md"
+          style={{ background: `${cfg.accent}14`, color: cfg.accent }}
         >
-          <GripVertical size={15} />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+          </svg>
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[12.5px] font-semibold text-slate-100">
+          <div className="text-[12.5px] font-semibold text-txt">
             {cfg.label}
           </div>
-          <div className="truncate text-[10.5px] text-slate-500">
-            node {node.id}
+          <div className="truncate text-[10.5px] text-txt-disabled">
+            {node.id}
           </div>
         </div>
         <button
           onClick={() => onDuplicate(node.id)}
           title="Duplicate"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-panel hover:text-white"
+          className="flex h-7 w-7 items-center justify-center rounded text-txt-secondary transition hover:bg-surface-dim hover:text-txt"
         >
           <Copy size={14} />
         </button>
         <button
           onClick={() => onDelete(node.id)}
           title="Delete"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-rose-500/15 hover:text-rose-400"
+          className="flex h-7 w-7 items-center justify-center rounded text-txt-secondary transition hover:bg-error/10 hover:text-error"
         >
           <Trash2 size={14} />
         </button>
         <button
           onClick={onClose}
           title="Close"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-panel hover:text-white"
+          className="flex h-7 w-7 items-center justify-center rounded text-txt-secondary transition hover:bg-surface-dim hover:text-txt"
         >
           <X size={14} />
         </button>
       </div>
 
       <div className="flex-1 space-y-4 overflow-y-auto p-3">
-        {/* name */}
+        {/* Name */}
         <div className="space-y-1">
-          <label className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+          <label className="text-[11px] font-medium text-txt-secondary">
             Name
           </label>
           <input
             value={node.data.label}
             onChange={(e) => onRename(node.id, e.target.value)}
-            className="w-full rounded-md border border-panel-line bg-panel px-2.5 py-1.5 text-[12.5px] font-medium text-slate-100 outline-none focus:border-accent/50"
+            className="w-full rounded border border-bline bg-white px-2.5 py-1.5 text-[12.5px] font-medium text-txt outline-none focus:border-ms-blue focus:ring-1 focus:ring-ms-blue/30"
           />
         </div>
 
-        {/* description */}
-        <p className="rounded-lg border border-panel-line bg-panel px-2.5 py-2 text-[11.5px] leading-relaxed text-slate-400">
+        {/* Description */}
+        <p className="rounded border border-bline bg-surface-dim px-2.5 py-2 text-[11.5px] leading-relaxed text-txt-secondary">
           {cfg.description}
         </p>
 
-        {/* fields */}
+        {/* Fields */}
         <div className="space-y-3">
           {genres.map((field) => (
             <div key={field.key} className="space-y-1">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                  {field.label}
-                  {field.required && (
-                    <span className="ml-1 text-rose-400">*</span>
-                  )}
-                </label>
-              </div>
+              <label className="text-[11px] font-medium text-txt-secondary">
+                {field.label}
+                {field.required && <span className="ml-1 text-error">*</span>}
+              </label>
               {renderField(field)}
               {field.help && (
-                <p className="text-[10.5px] text-slate-600">{field.help}</p>
+                <p className="text-[10.5px] text-txt-disabled">{field.help}</p>
               )}
             </div>
           ))}
         </div>
 
-        {/* execution result */}
+        {/* Execution result */}
         {result && result.state !== "idle" && (
           <div className="space-y-1.5 pt-1">
-            <label className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+            <label className="text-[11px] font-medium text-txt-secondary">
               Execution Output
             </label>
             <div
               className={cn(
-                "flex items-center gap-2 rounded-md border px-2.5 py-2 text-[12px]",
+                "flex items-center gap-2 rounded border px-2.5 py-2 text-[12px]",
                 status === "success" &&
-                  "border-emerald-500/30 bg-emerald-500/5 text-emerald-300",
+                  "border-success/30 bg-success/5 text-success",
                 status === "error" &&
-                  "border-rose-500/30 bg-rose-500/5 text-rose-300",
+                  "border-error/30 bg-error/5 text-error",
                 status === "running" &&
-                  "border-accent/30 bg-accent/5 text-accent-soft"
+                  "border-ms-blue/30 bg-ms-blue-50 text-ms-blue"
               )}
             >
               {status === "running" ? (
@@ -278,7 +276,7 @@ export default function ConfigPanel({
               )}
               <span className="flex-1 truncate">
                 {status === "running"
-                  ? "Executing…"
+                  ? "Executing..."
                   : status === "success"
                     ? result.duration > 0
                       ? `Completed in ${formatDuration(result.duration)}`
@@ -287,13 +285,13 @@ export default function ConfigPanel({
               </span>
             </div>
             {result.output !== undefined && status === "success" && (
-              <pre className="max-h-40 overflow-auto rounded-md border border-panel-line bg-canvas-deep p-2 font-mono text-[10.5px] leading-relaxed text-slate-400">
+              <pre className="max-h-40 overflow-auto rounded border border-bline bg-surface-dim p-2 font-mono text-[10.5px] leading-relaxed text-txt-secondary">
                 {JSON.stringify(result.output, null, 2)}
               </pre>
             )}
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

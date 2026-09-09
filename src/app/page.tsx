@@ -1,24 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { AnimatePresence, motion } from "framer-motion";
+import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import NodeLibrary from "@/components/NodeLibrary";
-import ConfigPanel from "@/components/ConfigPanel";
+import NodeDetailsModal from "@/components/NodeDetailsModal";
 import ExecutionPanel from "@/components/ExecutionPanel";
 import TemplatesModal from "@/components/TemplatesModal";
-import JsonModal from "@/components/JsonModal";
 import SettingsModal from "@/components/SettingsModal";
 import { useWorkflowStore } from "@/hooks/useWorkflowStore";
-import { cn } from "@/lib/utils";
-import { PanelRight, ChevronRight } from "lucide-react";
+import { Plus, LayoutTemplate } from "lucide-react";
 
 const FlowCanvas = dynamic(() => import("@/components/flow/FlowCanvas"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center text-slate-500">
-      Loading canvas…
+    <div className="flex h-full w-full items-center justify-center text-txt-secondary">
+      Loading canvas...
     </div>
   ),
 });
@@ -26,156 +24,182 @@ const FlowCanvas = dynamic(() => import("@/components/flow/FlowCanvas"), {
 export default function Page() {
   const store = useWorkflowStore();
   const [showTemplates, setShowTemplates] = useState(false);
-  const [showJson, setShowJson] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [configOpen, setConfigOpen] = useState(true);
+  const [sidebarTab, setSidebarTab] = useState("workflows");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const { workflow } = store;
+  const handleNodeClick = useCallback(
+    (id: string) => store.setSelection({ nodeId: id }),
+    [store.setSelection]
+  );
+
+  const handleNodeDoubleClick = useCallback(
+    (id: string) => store.openNodeDetails(id),
+    [store.openNodeDetails]
+  );
+
+  const handlePaneClick = useCallback(
+    () => store.setSelection(null),
+    [store.setSelection]
+  );
+
+  const handleTestNode = useCallback(() => {
+    store.closeNodeDetails();
+    store.run();
+  }, [store.closeNodeDetails, store.run]);
+
+  const handleRename = useCallback(
+    (name: string) => store.updateMeta({ name }),
+    [store.updateMeta]
+  );
+
+  const handleToggleStatus = useCallback(() => {
+    store.updateMeta({
+      status: store.workflow.meta.status === "ready" ? "draft" : "ready",
+    });
+  }, [store.updateMeta, store.workflow.meta.status]);
+
+  const flowProps = useMemo(
+    () => ({
+      nodes: store.nodes,
+      edges: store.edges,
+      results: store.workflow.results,
+      executionState: store.executionState,
+      selectedNodeId: store.selection?.nodeId ?? null,
+      onNodesChange: store.onNodesChange,
+      onEdgesChange: store.onEdgesChange,
+      onConnect: store.onConnect,
+      isValidConnection: store.isValidConnection,
+      onAddNode: store.addNode,
+      onDuplicate: store.duplicateNode,
+      onDelete: store.deleteNode,
+    }),
+    [
+      store.nodes,
+      store.edges,
+      store.workflow.results,
+      store.executionState,
+      store.selection?.nodeId,
+      store.onNodesChange,
+      store.onEdgesChange,
+      store.onConnect,
+      store.isValidConnection,
+      store.addNode,
+      store.duplicateNode,
+      store.deleteNode,
+    ]
+  );
 
   if (!mounted) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-canvas text-slate-500">
-        Loading workspace…
+      <div className="flex h-full w-full items-center justify-center bg-canvas text-txt-secondary">
+        Loading workspace...
       </div>
     );
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-canvas text-slate-200">
-      <TopBar
-        workflow={workflow}
-        isRunning={store.runnerActive}
-        onRun={store.run}
-        onReset={store.resetExecution}
-        onRename={(name) => store.updateMeta({ name })}
-        onToggleStatus={() =>
-          store.updateMeta({
-            status: workflow.meta.status === "ready" ? "draft" : "ready",
-          })
-        }
-        onOpenJson={() => setShowJson(true)}
-        onOpenTemplates={() => setShowTemplates(true)}
-        onToggleSettings={() => setShowSettings(true)}
+    <div className="flex h-full w-full bg-canvas">
+      <Sidebar
+        open={sidebarOpen}
+        onToggle={() => setSidebarOpen((o) => !o)}
+        activeTab={sidebarTab}
+        onTabChange={(tab) => {
+          setSidebarTab(tab);
+          if (tab === "templates") setShowTemplates(true);
+        }}
       />
 
-      <div className="flex min-h-0 flex-1">
-        {/* left library */}
-        <AnimatePresence initial={false}>
-          {sidebarOpen && (
-            <motion.aside
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 264, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="shrink-0 overflow-hidden border-r border-panel-line"
-            >
-              <NodeLibrary onAdd={store.addNode} />
-            </motion.aside>
-          )}
-        </AnimatePresence>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <TopBar
+          workflow={store.workflow}
+          isRunning={store.runnerActive}
+          onRun={store.run}
+          onReset={store.resetExecution}
+          onRename={handleRename}
+          onToggleStatus={handleToggleStatus}
+          onOpenTemplates={() => setShowTemplates(true)}
+        />
 
-        {/* toggle collapsers */}
-        <div className="flex w-6 shrink-0 flex-col items-center justify-start gap-1 border-r border-panel-line bg-canvas-deep py-2">
+        <div className="relative min-h-0 flex-1">
           <button
-            onClick={() => setSidebarOpen((o) => !o)}
-            title="Toggle node library"
-            className={cn(
-              "flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition hover:bg-panel hover:text-white",
-              !sidebarOpen && "rotate-180"
-            )}
+            onClick={() => store.setNodeLibraryOpen(true)}
+            className="absolute left-3 top-3 z-10 flex h-9 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 text-[12px] font-medium text-txt shadow-sm transition hover:bg-gray-50"
           >
-            <ChevronRight size={13} />
+            <Plus size={15} />
+            Add node
           </button>
-          <div className="h-px w-4 bg-panel-line" />
-          <button
-            onClick={() => setConfigOpen((o) => !o)}
-            title="Toggle inspector"
-            className={cn(
-              "flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition hover:bg-panel hover:text-white",
-              !configOpen && "rotate-180"
-            )}
-          >
-            <PanelRight size={13} />
-          </button>
-        </div>
 
-        {/* center canvas */}
-        <div className="relative min-w-0 flex-1">
           <FlowCanvas
-            nodes={store.nodes}
-            edges={store.edges}
-            results={workflow.results}
-            executionState={store.executionState}
-            selectedNodeId={store.selection?.nodeId ?? null}
-            onNodesChange={store.onNodesChange}
-            onEdgesChange={store.onEdgesChange}
-            onConnect={store.onConnect}
-            onNodeClick={(id) => {
-              store.setSelection({ nodeId: id });
-              if (!configOpen) setConfigOpen(true);
-            }}
-            onPaneClick={() => store.setSelection(null)}
-            onAddNode={store.addNode}
-            onDuplicate={store.duplicateNode}
-            onDelete={store.deleteNode}
+            {...flowProps}
+            onNodeClick={handleNodeClick}
+            onNodeDoubleClick={handleNodeDoubleClick}
+            onPaneClick={handlePaneClick}
           />
 
-          {/* empty state hint */}
-          {workflow.nodes.length === 0 && (
+          {store.workflow.nodes.length === 0 && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="rounded-xl border border-panel-line bg-canvas-deep/80 px-6 py-5 text-center backdrop-blur">
-                <div className="mb-2 text-[13px] font-semibold text-slate-300">
-                  Your canvas is empty
+              <div className="rounded-xl border border-gray-200 bg-white px-10 py-8 text-center shadow-lg">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-ms-blue-50">
+                  <LayoutTemplate size={26} className="text-ms-blue" />
                 </div>
-                <p className="max-w-xs text-[12px] leading-relaxed text-slate-500">
-                  Drag nodes from the library onto the canvas, or load a
-                  template to get started quickly.
+                <h2 className="mb-1 text-[16px] font-semibold text-txt">
+                  Build your first workflow
+                </h2>
+                <p className="max-w-sm text-[13px] leading-relaxed text-txt-secondary">
+                  Add nodes to the canvas and connect them to create automated workflows.
+                  Start with a trigger, then add actions and logic.
                 </p>
+                <div className="mt-5 flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => store.setNodeLibraryOpen(true)}
+                    className="pointer-events-auto rounded-lg bg-ms-blue px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-ms-blue-hover"
+                  >
+                    Add first step
+                  </button>
+                  <button
+                    onClick={() => setShowTemplates(true)}
+                    className="pointer-events-auto rounded-lg border border-gray-200 bg-white px-4 py-2 text-[13px] font-medium text-txt transition hover:bg-gray-50"
+                  >
+                    Browse templates
+                  </button>
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* right config panel */}
-        <AnimatePresence initial={false}>
-          {configOpen && (
-            <motion.aside
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="shrink-0 overflow-hidden border-l border-panel-line"
-            >
-              <ConfigPanel
-                node={store.selectedNode}
-                onUpdate={store.updateNodeConfig}
-                onRename={store.renameNode}
-                onDuplicate={store.duplicateNode}
-                onDelete={store.deleteNode}
-                onClose={() => {
-                  setConfigOpen(false);
-                  store.setSelection(null);
-                }}
-                executionState={store.executionState}
-              />
-            </motion.aside>
-          )}
-        </AnimatePresence>
+        <ExecutionPanel
+          workflow={store.workflow}
+          nodes={store.nodes}
+          isRunning={store.runnerActive}
+          executionState={store.executionState}
+          onReset={store.resetExecution}
+          onClearLogs={store.clearLogs}
+        />
       </div>
 
-      <ExecutionPanel
-        workflow={workflow}
-        nodes={store.nodes}
-        isRunning={store.runnerActive}
-        executionState={store.executionState}
-        onReset={store.resetExecution}
-        onClearLogs={store.clearLogs}
+      <NodeLibrary
+        open={store.nodeLibraryOpen}
+        onClose={() => store.setNodeLibraryOpen(false)}
+        onAdd={store.addNode}
+      />
+
+      <NodeDetailsModal
+        open={store.nodeDetailsOpen}
+        node={store.nodeDetailsNode}
+        upstreamNodes={store.upstreamNodes}
+        results={store.workflow.results}
+        onClose={store.closeNodeDetails}
+        onUpdate={store.updateNodeConfig}
+        onRename={store.renameNode}
+        onDelete={store.deleteNode}
+        onTestNode={handleTestNode}
       />
 
       <TemplatesModal
@@ -183,14 +207,9 @@ export default function Page() {
         onClose={() => setShowTemplates(false)}
         onUse={store.loadTemplate}
       />
-      <JsonModal
-        open={showJson}
-        workflow={workflow}
-        onClose={() => setShowJson(false)}
-      />
       <SettingsModal
         open={showSettings}
-        workflow={workflow}
+        workflow={store.workflow}
         onClose={() => setShowSettings(false)}
         onNew={store.newWorkflow}
       />

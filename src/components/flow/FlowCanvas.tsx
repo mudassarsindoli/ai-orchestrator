@@ -11,7 +11,6 @@ import {
   useReactFlow,
   useKeyPress,
   type ConnectionMode,
-  type OnSelectionChangeParams,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import WorkflowNodeView from "./workflow-node";
@@ -31,7 +30,9 @@ interface FlowCanvasProps {
   onNodesChange: (changes: any) => void;
   onEdgesChange: (changes: any) => void;
   onConnect: (connection: any) => void;
+  isValidConnection: (connection: any) => boolean;
   onNodeClick: (nodeId: string) => void;
+  onNodeDoubleClick: (nodeId: string) => void;
   onPaneClick: () => void;
   onAddNode: (type: string, position: { x: number; y: number }) => void;
   onDuplicate: (nodeId: string) => void;
@@ -47,7 +48,9 @@ function FlowCanvasInner({
   onNodesChange,
   onEdgesChange,
   onConnect,
+  isValidConnection,
   onNodeClick,
+  onNodeDoubleClick,
   onPaneClick,
   onAddNode,
   onDuplicate,
@@ -86,7 +89,6 @@ function FlowCanvasInner({
     });
   }, [edges, results, isRunning]);
 
-  // keyboard: duplicate/delete selected node
   const editing = useCallback(() => {
     const el = document.activeElement;
     return !!el?.closest("input, textarea, select, [contenteditable]");
@@ -94,13 +96,21 @@ function FlowCanvasInner({
 
   useEffect(() => {
     if (duplicateKey && !editing() && selectedNodeId) onDuplicate(selectedNodeId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duplicateKey]);
 
   useEffect(() => {
     if (deleteKey && !editing() && selectedNodeId) onDelete(selectedNodeId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deleteKey]);
+
+  const handleNodeClick = useCallback(
+    (_: React.MouseEvent, node: any) => onNodeClick(node.id),
+    [onNodeClick]
+  );
+
+  const handleNodeDoubleClick = useCallback(
+    (_: React.MouseEvent, node: any) => onNodeDoubleClick(node.id),
+    [onNodeDoubleClick]
+  );
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
@@ -118,21 +128,12 @@ function FlowCanvasInner({
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-  const onSelectionChange = useCallback(
-    (params: OnSelectionChangeParams) => {
-      const node = params.nodes[0];
-      if (node) onNodeClick(node.id as string);
-      else onPaneClick();
-    },
-    [onNodeClick, onPaneClick]
-  );
-
   const getStatusColor = (id: string) => {
     const s = results[id]?.state;
-    if (s === "running") return "#6d7bff";
-    if (s === "success") return "#22c55e";
-    if (s === "error") return "#ef4444";
-    return "#3f4757";
+    if (s === "running") return "#0078d4";
+    if (s === "success") return "#107c10";
+    if (s === "error") return "#d13438";
+    return "#d2d0ce";
   };
 
   return (
@@ -147,38 +148,50 @@ function FlowCanvasInner({
         onNodesChange={onNodesChange as any}
         onEdgesChange={onEdgesChange as any}
         onConnect={onConnect as any}
+        isValidConnection={isValidConnection as any}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        onSelectionChange={onSelectionChange}
-        onNodeDoubleClick={(_, node) => onNodeClick(node.id)}
+        onNodeClick={handleNodeClick}
+        onNodeDoubleClick={handleNodeDoubleClick}
         onPaneClick={onPaneClick}
         fitView
         minZoom={0.2}
         maxZoom={2}
-        connectionMode={"strict" as ConnectionMode}
+        connectionMode={"loose" as ConnectionMode}
         panOnScroll
         zoomOnDoubleClick={false}
         deleteKeyCode={null}
         selectionOnDrag
         snapToGrid
-        snapGrid={[12, 12]}
+        snapGrid={[16, 16]}
         defaultEdgeOptions={defaultEdgeOptions}
-        style={{ backgroundColor: "transparent" }}
+        style={{ backgroundColor: "#fafafa" }}
       >
         <Background
           variant={BackgroundVariant.Dots}
-          gap={22}
-          size={1.3}
-          color="#242b38"
+          gap={20}
+          size={1}
+          color="#e8e5e3"
         />
-        <Controls showInteractive={false} />
+        <Controls
+          showInteractive={false}
+          position="bottom-center"
+          style={{
+            display: "flex",
+            gap: 0,
+            borderRadius: 8,
+            overflow: "hidden",
+            border: "1px solid #edebe9",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+          }}
+        />
         <MiniMap
           pannable
           zoomable
           nodeColor={(n) => getStatusColor(n.id)}
           nodeStrokeWidth={0}
-          maskColor="rgba(8,9,13,0.75)"
-          bgColor="#0d1016"
+          maskColor="rgba(250,250,250,0.85)"
+          bgColor="#ffffff"
           nodeBorderRadius={4}
           style={{ width: 180, height: 110 }}
         />

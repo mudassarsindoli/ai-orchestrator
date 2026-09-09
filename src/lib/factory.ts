@@ -91,19 +91,13 @@ export interface EdgeLink {
 
 export function linkEdges(links: EdgeLink[], naturalSet: Set<string>): WorkflowEdge[] {
   return links.map((link) => {
-    const label =
-      link.sourceHandle && link.sourceHandle !== "out" &&
-      link.sourceHandle !== "run" &&
-      !naturalSet.has(link.sourceHandle)
-        ? link.sourceHandle
-        : undefined;
     return {
       id: `e-${uid()}`,
       source: link.source,
       target: link.target,
       ...(link.sourceHandle ? { sourceHandle: link.sourceHandle } : {}),
       ...(link.targetHandle ? { targetHandle: link.targetHandle } : {}),
-      ...(label ? { label, type: "workflow" } : { type: "workflow" }),
+      type: "workflow",
     };
   });
 }

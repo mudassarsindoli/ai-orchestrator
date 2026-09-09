@@ -9,42 +9,63 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        ms: {
+          blue: "#0078D4",
+          "blue-hover": "#106EBE",
+          "blue-light": "#E8F4FD",
+          "blue-50": "#F0F6FC",
+        },
         canvas: {
-          DEFAULT: "#0b0d12",
-          deep: "#08090d",
+          DEFAULT: "#FAFAFA",
+          deep: "#F5F5F5",
         },
-        panel: {
-          DEFAULT: "#10131a",
-          raised: "#151923",
-          line: "#232936",
+        surface: {
+          DEFAULT: "#FFFFFF",
+          dim: "#F3F2F1",
+          container: "#FAFAFA",
         },
-        accent: {
-          DEFAULT: "#6d7bff",
-          soft: "#8b96ff",
+        bline: {
+          DEFAULT: "#EDEBE9",
+          strong: "#D2D0CE",
         },
+        txt: {
+          DEFAULT: "#323130",
+          secondary: "#605E5C",
+          disabled: "#A19F9D",
+        },
+        success: "#107C10",
+        error: "#D13438",
+        warning: "#FFB900",
       },
       fontFamily: {
         sans: [
-          "Inter",
+          "Segoe UI",
           "-apple-system",
           "BlinkMacSystemFont",
-          "Segoe UI",
           "Roboto",
+          "Helvetica Neue",
           "sans-serif",
         ],
-        mono: ["JetBrains Mono", "Menlo", "Consolas", "monospace"],
+        mono: ["Cascadia Code", "Consolas", "Menlo", "monospace"],
       },
       keyframes: {
         "fade-in": {
           from: { opacity: "0", transform: "translateY(4px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        shimmer: {
-          "100%": { transform: "translateX(100%)" },
+        "slide-in-right": {
+          from: { opacity: "0", transform: "translateX(12px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "slide-in-left": {
+          from: { opacity: "0", transform: "translateX(-12px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
         },
       },
       animation: {
-        "fade-in": "fade-in 0.2s ease-out",
+        "fade-in": "fade-in 0.15s ease-out",
+        "slide-in-right": "slide-in-right 0.2s ease-out",
+        "slide-in-left": "slide-in-left 0.2s ease-out",
       },
     },
   },

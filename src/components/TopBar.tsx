@@ -1,19 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Play,
   RotateCcw,
-  Braces,
-  Settings,
-  Workflow as WorkflowIcon,
-  ChevronDown,
-  PanelRight,
+  Save,
+  ChevronRight,
   Square,
 } from "lucide-react";
 import type { Workflow } from "@/lib/types";
-import { formatDuration } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 interface TopBarProps {
@@ -23,9 +18,8 @@ interface TopBarProps {
   onReset: () => void;
   onRename: (name: string) => void;
   onToggleStatus: () => void;
-  onOpenJson: () => void;
   onOpenTemplates: () => void;
-  onToggleSettings: () => void;
+  saveStatus?: "saved" | "unsaved" | "saving";
 }
 
 export default function TopBar({
@@ -35,32 +29,21 @@ export default function TopBar({
   onReset,
   onRename,
   onToggleStatus,
-  onOpenJson,
   onOpenTemplates,
-  onToggleSettings,
+  saveStatus = "saved",
 }: TopBarProps) {
   const [editingName, setEditingName] = useState(false);
-  const running = isRunning;
 
   return (
-    <div className="relative z-40 flex h-12 shrink-0 items-center gap-2 border-b border-panel-line bg-canvas-deep/95 px-3 backdrop-blur">
-      {/* logo */}
-      <div className="flex items-center gap-2 pr-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent glow-text">
-          <WorkflowIcon size={15} />
-        </div>
-        <span className="hidden text-[13px] font-semibold tracking-tight text-slate-100 md:block">
-          Orchestrate
-        </span>
-        <span className="hidden rounded-md border border-panel-line bg-panel px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-slate-500 md:block">
-          Workflow Builder
-        </span>
+    <header className="relative z-40 flex h-12 shrink-0 items-center border-b border-bline bg-surface px-3">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1.5 text-[12px] text-txt-secondary">
+        <span className="font-medium text-txt">Workflows</span>
+        <ChevronRight size={12} className="text-txt-disabled" />
       </div>
 
-      <div className="h-6 w-px bg-panel-line" />
-
-      {/* editable name */}
-      <div className="flex min-w-0 items-center">
+      {/* Editable name */}
+      <div className="ml-1 flex min-w-0 items-center">
         {editingName ? (
           <input
             autoFocus
@@ -73,119 +56,109 @@ export default function TopBar({
               if (e.key === "Enter") (e.target as HTMLInputElement).blur();
               if (e.key === "Escape") setEditingName(false);
             }}
-            className="w-48 rounded-md border border-accent/50 bg-panel px-2 py-1 text-[13px] font-semibold text-slate-100 outline-none"
+            className="w-52 rounded border border-ms-blue bg-white px-2 py-1 text-[13px] font-semibold text-txt outline-none focus-ring"
           />
         ) : (
           <button
             onClick={() => setEditingName(true)}
             title="Rename workflow"
-            className="group flex max-w-[220px] items-center gap-1 rounded-md px-2 py-1 text-[13px] font-semibold text-slate-100 transition hover:bg-panel"
+            className="group max-w-[220px] truncate rounded px-2 py-1 text-[13px] font-semibold text-txt transition hover:bg-surface-dim"
           >
-            <span className="truncate">{workflow.meta.name}</span>
-            <span className="text-slate-500 opacity-0 transition group-hover:opacity-100">
-              <Settings size={11} />
-            </span>
+            {workflow.meta.name}
           </button>
         )}
       </div>
 
-      {/* status pill */}
+      {/* Save status */}
+      <div className="ml-3 flex items-center gap-1.5 text-[11px] text-txt-secondary">
+        <span
+          className={cn(
+            "h-1.5 w-1.5 rounded-full",
+            saveStatus === "saved" && "bg-success",
+            saveStatus === "unsaved" && "bg-warning",
+            saveStatus === "saving" && "bg-ms-blue"
+          )}
+        />
+        {saveStatus === "saved" && "Saved"}
+        {saveStatus === "unsaved" && "Unsaved"}
+        {saveStatus === "saving" && "Saving..."}
+      </div>
+
+      <div className="flex-1" />
+
+      {/* Status toggle */}
       <button
         onClick={onToggleStatus}
-        className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition"
-        style={
+        className={cn(
+          "flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition",
           workflow.meta.status === "ready"
-            ? { borderColor: "#22c55e44", background: "#22c55e14", color: "#4ade80" }
-            : { borderColor: "#f59e0b44", background: "#f59e0b14", color: "#fbbf24" }
-        }
+            ? "border-success/30 bg-success/10 text-success"
+            : "border-bline bg-surface-dim text-txt-secondary"
+        )}
       >
         <span
-          className="h-1.5 w-1.5 rounded-full"
-          style={{
-            background:
-              workflow.meta.status === "ready" ? "#22c55e" : "#f59e0b",
-            boxShadow:
-              workflow.meta.status === "ready"
-                ? "0 0 6px #22c55e"
-                : "0 0 6px #f59e0b",
-          }}
+          className={cn(
+            "h-1.5 w-1.5 rounded-full",
+            workflow.meta.status === "ready" ? "bg-success" : "bg-txt-disabled"
+          )}
         />
-        {workflow.meta.status === "ready" ? "Ready" : "Draft"}
-        <ChevronDown size={11} className="opacity-60" />
+        {workflow.meta.status === "ready" ? "Active" : "Draft"}
       </button>
 
-      {/* recent execution chip */}
-      {workflow.execution.duration > 0 && !running && (
-        <div className="hidden items-center gap-1.5 rounded-md border border-panel-line bg-panel px-2 py-1 text-[11px] text-slate-400 lg:flex">
-          <span
-            className={cn(
-              "h-1.5 w-1.5 rounded-full",
-              workflow.execution.state === "success" && "bg-emerald-400",
-              workflow.execution.state === "failed" && "bg-rose-400"
-            )}
-          />
-          <span className="font-mono">
-            {formatDuration(workflow.execution.duration)}
-          </span>
-        </div>
-      )}
+      <div className="mx-2 h-5 w-px bg-bline" />
 
-      <div className="ml-auto flex items-center gap-1.5">
-        <button
-          onClick={onOpenTemplates}
-          className="hidden items-center gap-1.5 rounded-md border border-panel-line bg-panel px-2.5 py-1.5 text-[12px] font-medium text-slate-300 transition hover:border-accent/40 hover:text-white sm:flex"
-        >
-          Templates
-        </button>
+      <button
+        onClick={onOpenTemplates}
+        className="flex h-8 items-center gap-1.5 rounded border border-bline px-2.5 text-[12px] font-medium text-txt-secondary transition hover:border-txt-disabled hover:text-txt"
+      >
+        Templates
+      </button>
 
-        <button
-          onClick={onOpenJson}
-          className="flex h-8 items-center gap-1.5 rounded-md border border-panel-line bg-panel px-2.5 text-[12px] font-medium text-slate-300 transition hover:border-accent/40 hover:text-white"
-        >
-          <Braces size={14} />
-          <span className="hidden md:inline">JSON</span>
-        </button>
+      <button
+        onClick={onReset}
+        className="flex h-8 w-8 items-center justify-center rounded border border-bline text-txt-secondary transition hover:border-txt-disabled hover:text-txt"
+        title="Reset execution"
+      >
+        <RotateCcw size={14} />
+      </button>
 
-        <button
-          onClick={onToggleSettings}
-          className="flex h-8 w-8 items-center justify-center rounded-md border border-panel-line bg-panel text-slate-300 transition hover:border-accent/40 hover:text-white"
-          title="Settings"
-        >
-          <PanelRight size={14} />
-        </button>
+      <div className="mx-2 h-5 w-px bg-bline" />
 
-        <div className="mx-1 h-6 w-px bg-panel-line" />
+      {/* Test button */}
+      <button
+        onClick={onRun}
+        disabled={isRunning || workflow.nodes.length === 0}
+        className={cn(
+          "flex h-8 items-center gap-1.5 rounded border px-3 text-[12px] font-medium transition",
+          isRunning
+            ? "border-error/40 bg-error/10 text-error"
+            : workflow.nodes.length === 0
+              ? "cursor-not-allowed border-bline bg-surface-dim text-txt-disabled"
+              : "border-ms-blue text-ms-blue hover:bg-ms-blue-50"
+        )}
+        title={isRunning ? "Stop" : "Test workflow"}
+      >
+        {isRunning ? (
+          <>
+            <Square size={12} fill="currentColor" />
+            Stop
+          </>
+        ) : (
+          <>
+            <Play size={12} fill="currentColor" />
+            Test Workflow
+          </>
+        )}
+      </button>
 
-        <button
-          onClick={onReset}
-          className="flex h-8 items-center gap-1.5 rounded-md border border-panel-line bg-panel px-2.5 text-[12px] font-medium text-slate-300 transition hover:border-panel-line hover:text-white"
-          title="Reset execution"
-        >
-          <RotateCcw size={13} />
-        </button>
-
-        <motion.button
-          onClick={onRun}
-          disabled={running || workflow.nodes.length === 0}
-          whileTap={{ scale: 0.97 }}
-          className={cn(
-            "relative flex h-8 items-center gap-1.5 overflow-hidden rounded-md px-4 text-[12.5px] font-semibold shadow-md transition",
-            running
-              ? "bg-rose-500/90 text-white"
-              : workflow.nodes.length === 0
-                ? "cursor-not-allowed bg-panel text-slate-500"
-                : "bg-accent text-white hover:bg-accent-soft"
-          )}
-          title={running ? "Stop (not supported) — running" : "Run workflow"}
-        >
-          {running ? (
-            <Square size={13} fill="currentColor" />
-          ) : (
-            <Play size={13} fill="currentColor" />
-          )}
-          {running ? "Running…" : "Run"}
-        </motion.button>
-      </div>
-    </div>
+      {/* Save button */}
+      <button
+        className="ml-1.5 flex h-8 items-center gap-1.5 rounded bg-ms-blue px-3 text-[12px] font-semibold text-white transition hover:bg-ms-blue-hover"
+        title="Save workflow"
+      >
+        <Save size={13} />
+        Save
+      </button>
+    </header>
   );
 }

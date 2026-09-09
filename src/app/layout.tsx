@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Orchestrate — AI Workflow Builder",
   description:
-    "A professional AI workflow orchestration builder for designing, connecting and running AI pipelines.",
+    "Design, build, and run AI-powered automation workflows with a visual drag-and-drop editor.",
 };
 
 export default function RootLayout({

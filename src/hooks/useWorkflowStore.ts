@@ -28,7 +28,6 @@ import {
   emptyWorkflow,
   buildNode,
   linkEdges,
-  initialConfigFor,
 } from "@/lib/factory";
 import { getNodeConfig } from "@/lib/nodes";
 import { runEngine, type EngineEvents } from "@/lib/execution";
@@ -51,16 +50,24 @@ export function useWorkflowStore() {
       const trigger = buildNode({
         id: "starter-manual",
         type: "manual",
-        position: { x: 320, y: 240 },
+        position: { x: 320, y: 280 },
       });
-      const hello = buildNode({
-        id: "starter-llm",
-        type: "llm",
-        position: { x: 620, y: 240 },
+      const agent = buildNode({
+        id: "starter-agent",
+        type: "ai_agent",
+        position: { x: 640, y: 280 },
       });
-      wf.nodes = [trigger, hello];
+      const slack = buildNode({
+        id: "starter-slack",
+        type: "slack",
+        position: { x: 960, y: 280 },
+      });
+      wf.nodes = [trigger, agent, slack];
       wf.edges = linkEdges(
-        [{ source: "starter-manual", target: "starter-llm" }],
+        [
+          { source: "starter-manual", target: "starter-agent" },
+          { source: "starter-agent", target: "starter-slack" },
+        ],
         new Set()
       );
     }
@@ -71,11 +78,13 @@ export function useWorkflowStore() {
   const [runId, setRunId] = useState<string | null>(null);
   const [runnerActive, setRunnerActive] = useState(false);
   const [activeEdgeIds, setActiveEdgeIds] = useState<Set<string>>(new Set());
+  const [nodeDetailsOpen, setNodeDetailsOpen] = useState(false);
+  const [nodeDetailsNodeId, setNodeDetailsNodeId] = useState<string | null>(null);
+  const [nodeLibraryOpen, setNodeLibraryOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const workflowRef = useRef(workflow);
   workflowRef.current = workflow;
 
-  // ── Persistence ────────────────────────────────────────────
   const autosave = useMemo(() => {
     if (typeof window === "undefined") return true;
     return isAutosaveEnabled();
@@ -86,7 +95,6 @@ export function useWorkflowStore() {
     saveWorkflow(workflow);
   }, [workflow, autosave]);
 
-  // ── Derived node/edge arrays for React Flow ────────────────
   const nodes = workflow.nodes;
   const edges = workflow.edges;
 
@@ -108,38 +116,38 @@ export function useWorkflowStore() {
 
   const onConnect = useCallback((connection: Connection) => {
     if (!connection.source || !connection.target) return;
+    if (connection.source === connection.target) return;
+
     setWorkflow((wf) => {
-      // reject duplicate or self connections
-      const exists = wf.edges.some(
-        (e) =>
-          e.source === connection.source &&
-          e.target === connection.target &&
-          ((connection.sourceHandle && e.sourceHandle === connection.sourceHandle) ||
-            !connection.sourceHandle) &&
-          ((connection.targetHandle && e.targetHandle === connection.targetHandle) ||
-            !connection.targetHandle)
-      );
-      if (exists || connection.source === connection.target) return wf;
-      const cfg = getNodeConfig(
-        wf.nodes.find((n) => n.id === connection.source)?.data.type ?? ""
-      );
-      const label =
-        connection.sourceHandle && connection.sourceHandle !== "out" &&
-        connection.sourceHandle !== "run" &&
-        connection.sourceHandle !== "tick"
-          ? connection.sourceHandle
-          : undefined;
-      const edge = {
-        ...connection,
+      const newEdge: WorkflowEdge = {
         id: `e-${uid()}`,
+        source: connection.source!,
+        target: connection.target!,
+        sourceHandle: connection.sourceHandle ?? undefined,
+        targetHandle: connection.targetHandle ?? undefined,
         type: "workflow",
-        ...(label ? { label } : {}),
       };
-      return { ...wf, edges: addEdge(edge as any, wf.edges as any) };
+      return { ...wf, edges: [...wf.edges, newEdge] };
     });
   }, []);
 
-  // ── Node config updates (right panel edits) ───────────────
+  const isValidConnection = useCallback(
+    (connection: Connection) => {
+      if (!connection.source || !connection.target) return false;
+      if (connection.source === connection.target) return false;
+      // Check for duplicate
+      const exists = workflow.edges.some(
+        (e) =>
+          e.source === connection.source &&
+          e.target === connection.target &&
+          e.sourceHandle === connection.sourceHandle &&
+          e.targetHandle === connection.targetHandle
+      );
+      return !exists;
+    },
+    [workflow.edges]
+  );
+
   const updateNodeConfig = useCallback(
     (nodeId: string, key: string, value: unknown) => {
       setWorkflow((wf) => ({
@@ -172,7 +180,6 @@ export function useWorkflowStore() {
     }));
   }, []);
 
-  // ── Add node from library ─────────────────────────────────
   const addNode = useCallback(
     (type: string, position: { x: number; y: number }) => {
       const node = buildNode({ type, position });
@@ -183,7 +190,6 @@ export function useWorkflowStore() {
     []
   );
 
-  // ── Duplicate ─────────────────────────────────────────────
   const duplicateNode = useCallback((nodeId: string) => {
     setWorkflow((wf) => {
       const src = wf.nodes.find((n) => n.id === nodeId);
@@ -204,7 +210,6 @@ export function useWorkflowStore() {
     });
   }, []);
 
-  // ── Delete ────────────────────────────────────────────────
   const deleteNode = useCallback((nodeId: string) => {
     setWorkflow((wf) => {
       const edges = wf.edges.filter(
@@ -213,9 +218,12 @@ export function useWorkflowStore() {
       return { ...wf, nodes: wf.nodes.filter((n) => n.id !== nodeId), edges };
     });
     setSelection(null);
-  }, []);
+    if (nodeDetailsNodeId === nodeId) {
+      setNodeDetailsOpen(false);
+      setNodeDetailsNodeId(null);
+    }
+  }, [nodeDetailsNodeId]);
 
-  // ── Template load ─────────────────────────────────────────
   const loadTemplate = useCallback((build: () => Workflow) => {
     if (abortRef.current) abortRef.current.abort();
     const tpl = build();
@@ -228,9 +236,10 @@ export function useWorkflowStore() {
     setActiveEdgeIds(new Set());
     setRunnerActive(false);
     setRunId(null);
+    setNodeDetailsOpen(false);
+    setNodeDetailsNodeId(null);
   }, []);
 
-  // ── Reset canvas (new) ────────────────────────────────────
   const newWorkflow = useCallback(() => {
     if (abortRef.current) abortRef.current.abort();
     setWorkflow(emptyWorkflow("Untitled Workflow"));
@@ -239,6 +248,8 @@ export function useWorkflowStore() {
     setRunnerActive(false);
     setRunId(null);
     clearWorkflow();
+    setNodeDetailsOpen(false);
+    setNodeDetailsNodeId(null);
   }, []);
 
   const updateMeta = useCallback(
@@ -251,7 +262,17 @@ export function useWorkflowStore() {
     []
   );
 
-  // ── Run ───────────────────────────────────────────────────
+  const openNodeDetails = useCallback((nodeId: string) => {
+    setNodeDetailsNodeId(nodeId);
+    setNodeDetailsOpen(true);
+    setSelection({ nodeId });
+  }, []);
+
+  const closeNodeDetails = useCallback(() => {
+    setNodeDetailsOpen(false);
+    setNodeDetailsNodeId(null);
+  }, []);
+
   const run = useCallback(
     async (opts: { seedFail?: boolean } = {}) => {
       if (runnerActive) return;
@@ -265,7 +286,6 @@ export function useWorkflowStore() {
       setRunnerActive(true);
       setActiveEdgeIds(new Set());
 
-      // reset old results
       setWorkflow((wf) => ({
         ...wf,
         results: {},
@@ -364,6 +384,21 @@ export function useWorkflowStore() {
     ? workflow.nodes.find((n) => n.id === selection.nodeId) ?? null
     : null;
 
+  const nodeDetailsNode = nodeDetailsNodeId
+    ? workflow.nodes.find((n) => n.id === nodeDetailsNodeId) ?? null
+    : null;
+
+  const upstreamNodes = useMemo(() => {
+    if (!nodeDetailsNodeId) return [];
+    const upstreamIds = new Set<string>();
+    for (const edge of workflow.edges) {
+      if (edge.target === nodeDetailsNodeId && edge.source) {
+        upstreamIds.add(edge.source);
+      }
+    }
+    return workflow.nodes.filter((n) => upstreamIds.has(n.id));
+  }, [nodeDetailsNodeId, workflow.edges, workflow.nodes]);
+
   return {
     workflow,
     nodes,
@@ -374,6 +409,7 @@ export function useWorkflowStore() {
     onNodesChange,
     onEdgesChange,
     onConnect,
+    isValidConnection,
     updateNodeConfig,
     renameNode,
     addNode,
@@ -388,5 +424,13 @@ export function useWorkflowStore() {
     runnerActive,
     executionState,
     runId,
+    nodeDetailsOpen,
+    nodeDetailsNodeId,
+    nodeDetailsNode,
+    upstreamNodes,
+    openNodeDetails,
+    closeNodeDetails,
+    nodeLibraryOpen,
+    setNodeLibraryOpen,
   };
 }

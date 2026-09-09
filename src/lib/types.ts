@@ -2,10 +2,10 @@ import type { Node, Edge } from "@xyflow/react";
 
 export type NodeCategory =
   | "Triggers"
+  | "Apps"
   | "AI"
-  | "Data"
   | "Logic"
-  | "Integrations"
+  | "Data"
   | "Actions";
 
 export type RunStatus = "idle" | "running" | "success" | "error";
@@ -34,8 +34,10 @@ export interface ConfigField {
 export interface NodeConfig {
   type: string;
   label: string;
+  service: string;
   category: NodeCategory;
   icon: string;
+  color: string;
   accent: string;
   description: string;
   headline: string;

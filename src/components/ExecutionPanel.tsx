@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   Terminal,
   List,
@@ -15,10 +14,13 @@ import {
   RotateCcw,
   Trash2,
 } from "lucide-react";
-import type { ExecutionState, LogEntry, Workflow, WorkflowNode } from "@/lib/types";
+import type {
+  ExecutionState,
+  Workflow,
+  WorkflowNode,
+} from "@/lib/types";
 import { getNodeConfig } from "@/lib/nodes";
-import { formatDuration, formatTimestamp } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { formatDuration, formatTimestamp, cn } from "@/lib/utils";
 
 interface ExecutionPanelProps {
   workflow: Workflow;
@@ -49,47 +51,49 @@ export default function ExecutionPanel({
   }, [logs, tab]);
 
   const statusColor = useMemo(() => {
-    if (executionState === "running") return "#6d7bff";
-    if (executionState === "success") return "#22c55e";
-    if (executionState === "failed") return "#ef4444";
-    return "#3f4757";
+    if (executionState === "running") return "#0078d4";
+    if (executionState === "success") return "#107c10";
+    if (executionState === "failed") return "#d13438";
+    return "#a19f9d";
   }, [executionState]);
 
-  const fmt = (ms: number) => (ms > 0 ? formatDuration(ms) : "—");
+  const fmt = (ms: number) => (ms > 0 ? formatDuration(ms) : "--");
 
   return (
     <div
-      className="relative z-30 flex shrink-0 flex-col border-t border-panel-line bg-canvas-deep/95 backdrop-blur"
-      style={{ height: open ? 220 : 40 }}
+      className="relative z-30 flex shrink-0 flex-col border-t border-bline bg-surface"
+      style={{ height: open ? 220 : 36 }}
     >
-      {/* header */}
-      <div className="flex h-10 shrink-0 items-center gap-2 px-3">
+      {/* Header */}
+      <div className="flex h-9 shrink-0 items-center gap-2 px-3">
         <div
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium"
-          style={{ background: `${statusColor}18`, color: statusColor }}
+          className="flex items-center gap-1.5 rounded px-2 py-0.5 text-[11px] font-medium"
+          style={{ background: `${statusColor}12`, color: statusColor }}
         >
           <span
             className="h-1.5 w-1.5 rounded-full"
-            style={{ background: statusColor, boxShadow: `0 0 6px ${statusColor}` }}
+            style={{ background: statusColor }}
           />
-          {executionState === "idle" && "Idle"}
+          {executionState === "idle" && "Ready"}
           {executionState === "running" && "Running"}
-          {executionState === "success" && "Success"}
+          {executionState === "success" && "Completed"}
           {executionState === "failed" && "Failed"}
         </div>
 
-        <div className="flex h-6 items-center gap-1 overflow-hidden rounded-md border border-panel-line">
+        <div className="flex h-6 items-center gap-0 overflow-hidden rounded border border-bline">
           <button
             onClick={() => setTab("logs")}
             className={cn(
               "flex h-full items-center gap-1 px-2 text-[11px] font-medium transition",
-              tab === "logs" ? "bg-panel text-slate-100" : "text-slate-500 hover:text-slate-300"
+              tab === "logs"
+                ? "bg-surface-dim text-txt"
+                : "text-txt-secondary hover:text-txt"
             )}
           >
             <Terminal size={11} />
             Logs
             {logs.length > 0 && (
-              <span className="rounded bg-panel-line px-1 text-[9px] text-slate-400">
+              <span className="rounded bg-bline px-1 text-[9px] text-txt-secondary">
                 {logs.length}
               </span>
             )}
@@ -98,20 +102,22 @@ export default function ExecutionPanel({
             onClick={() => setTab("nodes")}
             className={cn(
               "flex h-full items-center gap-1 px-2 text-[11px] font-medium transition",
-              tab === "nodes" ? "bg-panel text-slate-100" : "text-slate-500 hover:text-slate-300"
+              tab === "nodes"
+                ? "bg-surface-dim text-txt"
+                : "text-txt-secondary hover:text-txt"
             )}
           >
             <List size={11} />
             Nodes
             {nodes.length > 0 && (
-              <span className="rounded bg-panel-line px-1 text-[9px] text-slate-400">
+              <span className="rounded bg-bline px-1 text-[9px] text-txt-secondary">
                 {nodes.length}
               </span>
             )}
           </button>
         </div>
 
-        <div className="ml-auto flex items-center gap-1.5 text-[11px] text-slate-500">
+        <div className="ml-auto flex items-center gap-1 text-[11px] text-txt-secondary">
           {execution.duration > 0 && (
             <span className="flex items-center gap-1 font-mono">
               <Timer size={11} />
@@ -120,116 +126,125 @@ export default function ExecutionPanel({
           )}
           <button
             onClick={onReset}
-            title="Reset execution"
-            className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition hover:bg-panel hover:text-white"
+            title="Reset"
+            className="flex h-6 w-6 items-center justify-center rounded text-txt-secondary transition hover:bg-surface-dim hover:text-txt"
           >
             <RotateCcw size={12} />
           </button>
           <button
             onClick={onClearLogs}
             title="Clear logs"
-            className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition hover:bg-panel hover:text-white"
+            className="flex h-6 w-6 items-center justify-center rounded text-txt-secondary transition hover:bg-surface-dim hover:text-txt"
           >
             <Trash2 size={12} />
           </button>
           <button
             onClick={() => setOpen((o) => !o)}
             title={open ? "Collapse" : "Expand"}
-            className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition hover:bg-panel hover:text-white"
+            className="flex h-6 w-6 items-center justify-center rounded text-txt-secondary transition hover:bg-surface-dim hover:text-txt"
           >
             {open ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
           </button>
-          <button
-            onClick={() => setOpen(false)}
-            className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition hover:bg-panel hover:text-white"
-          >
-            <X size={13} />
-          </button>
+          {open && (
+            <button
+              onClick={() => setOpen(false)}
+              className="flex h-6 w-6 items-center justify-center rounded text-txt-secondary transition hover:bg-surface-dim hover:text-txt"
+            >
+              <X size={13} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* body */}
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="h-[calc(100%-40px)] flex-1 overflow-hidden border-t border-panel-line/60"
-          >
-            {tab === "logs" ? (
-              logs.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-[12px] text-slate-600">
-                  Run the workflow to see execution logs.
-                </div>
-              ) : (
-                <div ref={logRef} className="h-full overflow-y-auto px-3 py-2 font-mono text-[11.5px] leading-relaxed">
-                  {logs.map((log) => (
-                    <div key={log.id} className="flex items-start gap-2 py-0.5">
-                      <span className="shrink-0 text-slate-600">
-                        {formatTimestamp(log.timestamp)}
-                      </span>
-                      <span
-                        className={cn(
-                          "shrink-0 px-1.5 py-px text-[10px] font-semibold uppercase",
-                          log.level === "success" && "text-emerald-400",
-                          log.level === "error" && "text-rose-400",
-                          log.level === "warn" && "text-amber-400",
-                          log.level === "info" && "text-sky-400"
-                        )}
-                      >
-                        {log.level}
-                      </span>
-                      <span className="shrink-0 text-accent-soft">{log.source}</span>
-                      <span className="break-words text-slate-300">{log.message}</span>
-                    </div>
-                  ))}
-                </div>
-              )
-            ) : (
-              <div className="h-full overflow-y-auto px-3 py-2">
-                <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {nodes.map((n) => {
-                    const cfg = getNodeConfig(n.data.type);
-                    const r = workflow.results[n.id];
-                    const st = r?.state ?? "idle";
-                    return (
-                      <div
-                        key={n.id}
-                        className="flex items-center gap-2 rounded-lg border border-panel-line bg-panel px-2.5 py-2"
-                      >
-                        <div
-                          className="h-5 w-1 rounded"
-                          style={{ background: cfg.accent }}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-[11.5px] font-medium text-slate-200">
-                            {n.data.label}
-                          </div>
-                          <div className="truncate text-[10px] text-slate-500">
-                            {cfg.label}
-                          </div>
-                        </div>
-                        {st === "running" && <Loader2 size={13} className="animate-spin text-accent" />}
-                        {st === "success" && <CheckCircle2 size={13} className="text-emerald-400" />}
-                        {st === "error" && <XCircle size={13} className="text-rose-400" />}
-                        {st === "idle" && (
-                          <span className="text-[10px] text-slate-600">—</span>
-                        )}
-                        {r?.duration ? (
-                          <span className="font-mono text-[10px] text-slate-500">
-                            {formatDuration(r.duration)}
-                          </span>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
+      {/* Body */}
+      {open && (
+        <div className="h-[calc(100%-36px)] flex-1 overflow-hidden border-t border-bline">
+          {tab === "logs" ? (
+            logs.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-[12px] text-txt-disabled">
+                Run the workflow to see execution logs.
               </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+            ) : (
+              <div
+                ref={logRef}
+                className="h-full overflow-y-auto px-3 py-2 font-mono text-[11.5px] leading-relaxed"
+              >
+                {logs.map((log) => (
+                  <div key={log.id} className="flex items-start gap-2 py-0.5">
+                    <span className="shrink-0 text-txt-disabled">
+                      {formatTimestamp(log.timestamp)}
+                    </span>
+                    <span
+                      className={cn(
+                        "shrink-0 px-1 text-[10px] font-semibold uppercase",
+                        log.level === "success" && "text-success",
+                        log.level === "error" && "text-error",
+                        log.level === "warn" && "text-warning",
+                        log.level === "info" && "text-ms-blue"
+                      )}
+                    >
+                      {log.level}
+                    </span>
+                    <span className="shrink-0 text-txt-secondary">
+                      {log.source}
+                    </span>
+                    <span className="break-words text-txt">{log.message}</span>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : (
+            <div className="h-full overflow-y-auto px-3 py-2">
+              <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {nodes.map((n) => {
+                  const cfg = getNodeConfig(n.data.type);
+                  const r = workflow.results[n.id];
+                  const st = r?.state ?? "idle";
+                  return (
+                    <div
+                      key={n.id}
+                      className="flex items-center gap-2 rounded border border-bline bg-white px-2.5 py-2"
+                    >
+                      <div
+                        className="h-5 w-1 shrink-0 rounded"
+                        style={{ background: cfg.accent }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[11.5px] font-medium text-txt">
+                          {n.data.label}
+                        </div>
+                        <div className="truncate text-[10px] text-txt-secondary">
+                          {cfg.label}
+                        </div>
+                      </div>
+                      {st === "running" && (
+                        <Loader2
+                          size={13}
+                          className="animate-spin text-ms-blue"
+                        />
+                      )}
+                      {st === "success" && (
+                        <CheckCircle2 size={13} className="text-success" />
+                      )}
+                      {st === "error" && (
+                        <XCircle size={13} className="text-error" />
+                      )}
+                      {st === "idle" && (
+                        <span className="text-[10px] text-txt-disabled">--</span>
+                      )}
+                      {r?.duration ? (
+                        <span className="font-mono text-[10px] text-txt-secondary">
+                          {formatDuration(r.duration)}
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

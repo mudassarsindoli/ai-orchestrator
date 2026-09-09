@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html,
@@ -13,79 +13,82 @@ body {
 }
 
 body {
-  background: #08090d;
-  color: #e7eaf0;
+  background: #fafafa;
+  color: #323130;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* ── Scrollbars ─────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2b3240 transparent;
+  scrollbar-color: #d2d0ce transparent;
 }
+
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
+
 *::-webkit-scrollbar-thumb {
-  background: #2b3240;
-  border-radius: 8px;
+  background: #d2d0ce;
+  border-radius: 3px;
 }
+
 *::-webkit-scrollbar-thumb:hover {
-  background: #394152;
+  background: #a19f9d;
 }
+
 *::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* ── React Flow theme overrides ────────────────────────────── */
 .react-flow__attribution {
   background: transparent;
-  color: #4b5563;
+  color: #a19f9d;
   font-size: 9px;
 }
+
 .react-flow__attribution a {
-  color: #4b5563;
+  color: #a19f9d;
 }
 
 .react-flow__controls {
-  border-radius: 10px;
+  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  border: 1px solid #232936;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #edebe9;
 }
+
 .react-flow__controls-button {
-  background: #151923;
-  border-bottom: 1px solid #232936;
-  color: #cbd5e1;
+  background: #ffffff;
+  border-bottom: 1px solid #edebe9;
+  color: #605e5c;
   width: 28px;
   height: 28px;
-  transition: background 0.12s ease, color 0.12s ease;
 }
+
 .react-flow__controls-button:hover {
-  background: #1d2330;
-  color: #ffffff;
+  background: #f3f2f1;
+  color: #323130;
 }
+
 .react-flow__controls-button svg {
   fill: currentColor;
 }
 
 .react-flow__minimap {
-  border-radius: 10px;
+  border-radius: 6px;
   overflow: hidden;
-  border: 1px solid #232936;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid #edebe9;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .react-flow__handle {
   width: 10px;
   height: 10px;
   border-radius: 9999px;
-  border: 2px solid #08090d;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-.react-flow__handle:hover {
-  transform: scale(1.25);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #d2d0ce;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
 .react-flow__node {
@@ -97,42 +100,37 @@ body {
 }
 
 .react-flow__node.selected .workflow-node {
-  border-color: var(--node-accent, #6d7bff);
-  box-shadow:
-    0 0 0 1px var(--node-accent, #6d7bff),
-    0 0 18px -4px var(--node-accent, #6d7bff);
+  border-color: #0078d4;
+  box-shadow: 0 0 0 1px #0078d4, 0 2px 8px rgba(0, 120, 212, 0.12);
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: #ffffff;
+  stroke: #0078d4;
 }
 
-/* Hide the default edge selection box clutter */
 .react-flow__edge .react-flow__edge-textbg {
-  fill: #0b0d12;
-  stroke: #232936;
-}
-.react-flow__edge-text {
-  fill: #9aa4b5;
-  font-size: 10px;
-  font-weight: 600;
-  font-family: ui-monospace, monospace;
+  fill: #ffffff;
+  stroke: #edebe9;
 }
 
-/* selection rectangle */
+.react-flow__edge-text {
+  fill: #605e5c;
+  font-size: 10px;
+  font-weight: 500;
+}
+
 .react-flow__selection {
-  background: rgba(109, 123, 255, 0.08);
-  border: 1px solid rgba(109, 123, 255, 0.5);
+  background: rgba(0, 120, 212, 0.06);
+  border: 1px solid rgba(0, 120, 212, 0.4);
   border-radius: 4px;
 }
 
 .react-flow__nodesselection-rect {
-  border: 1px dashed rgba(109, 123, 255, 0.6);
+  border: 1px dashed rgba(0, 120, 212, 0.5);
 }
 
-/* connection line in progress */
 .react-flow__connection-path {
-  stroke: #6d7bff;
+  stroke: #0078d4;
   stroke-width: 2;
   stroke-dasharray: 6 4;
   animation: dash-flow 1.2s linear infinite;
@@ -144,11 +142,17 @@ body {
   }
 }
 
-/* Fade in nodes on load — re-triggered via key on templates */
 @layer utilities {
-  .glow-text {
-    text-shadow: 0 0 18px rgba(109, 123, 255, 0.55);
+  .shadow-ms {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .shadow-ms-lg {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #0078d4;
   }
 }
-
-/* Subtle canvas center "watermark" grid already via Background */
